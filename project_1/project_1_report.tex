@@ -1,0 +1,128 @@
+% ============================
+% REVTeX 4.2e (revtex4-2) + AAPM Template
+% ============================
+\documentclass[
+  aapm,
+  amsmath,amssymb,
+  reprint,          % journal-like two-column layout
+  %preprint,        % uncomment for single-column draft
+  floatfix
+]{revtex4-2}
+
+% ----------------------------
+% Packages
+% ----------------------------
+\usepackage{graphicx}   % figures
+\usepackage{dcolumn}    % decimal-aligned columns in tables
+\usepackage{bm}         % bold math
+\usepackage{siunitx}    % SI units (optional, nice for reports)
+\usepackage{hyperref}   % hyperlinks
+
+% Optional: nicer captions (REVTeX already formats captions well)
+% \usepackage[labelfont=bf]{caption}
+
+% ----------------------------
+% Title block
+% ----------------------------
+\begin{document}
+
+\title{Project 1: Numerical Solutions to Elliptic PDEs} % <-- change title
+
+\author{Your Name}
+\email{your.email@unr.edu} % optional
+\affiliation{Department of Mechanical Engineering, University of Nevada, Reno}
+
+\date{\today}
+
+\begin{abstract}
+Write a concise abstract (100--200 words). State the PDEs solved, numerical methods
+used (e.g., second-order finite differences, conjugate gradient, time stepping), and
+key outcomes (accuracy, convergence, settling time to steady state, etc.)
+\end{abstract}
+
+\maketitle
+
+% ============================
+% Main text
+% ============================
+
+\section{Introduction}
+Briefly motivate the problem (2D heat equation with source; steady Poisson limit),
+and summarize what you implemented and what you will report (mesh, solver, error,
+and results figures) \citep{saad2003}.
+
+\section{Governing Equations and Boundary Conditions}
+State the PDE(s) and boundary conditions clearly. For example, the 2D heat equation
+with source,
+\begin{equation}
+\frac{\partial u}{\partial t} = \alpha\left(\frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right) + \kappa(x,y),
+\end{equation}
+and its steady-state Poisson equation,
+\begin{equation}
+\alpha\left(\frac{\partial^2 \bar{u}}{\partial x^2} + \frac{\partial^2 \bar{u}}{\partial y^2}\right) = -\kappa(x,y).
+\end{equation}
+List the mixed boundary conditions on each side of the square domain.
+
+\section{Numerical Method}
+\subsection{Grid and Discretization}
+Describe the uniform grid, $h_x$, $h_y$, indexing, and the second-order central stencil.
+Include the 5-point Laplacian formula.
+
+\subsection{Linear System and Solver (Poisson)}
+Describe matrix form $A\mathbf{u}=\mathbf{b}$, sparsity, and the conjugate gradient method
+(tolerance, max iterations, stopping criterion).
+
+\subsection{Time Integration (Heat Equation)}
+State your time-marching method (e.g., forward Euler / backward Euler / Crank--Nicolson),
+time step $\Delta t$, and the stopping criterion:
+\begin{equation}
+\frac{\|u(x,y,t) - \bar{u}(x,y)\|_2}{\|\bar{u}(x,y)\|_2} < 10^{-4}.
+\end{equation}
+
+\section{Results}
+\subsection{Poisson Steady-State Solution}
+Show the contour/heatmap of $\bar{u}(x,y)$ and discuss qualitative behavior.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{Sol.pdf}
+  \caption{Steady-state solution $\bar{u}(x,y)$ obtained by solving the Poisson equation
+  using second-order finite differences and conjugate gradient.}
+  \label{fig:poisson}
+\end{figure}
+
+\subsection{Transient Heat Equation and Settling Time}
+Show snapshots or a convergence plot versus time, and report the settling time $t^\ast$.
+
+% \begin{figure}[t]
+%   \centering
+%   \includegraphics[width=\linewidth]{figs/convergence_vs_time.pdf}
+%   \caption{Relative $L^2$ error $\|u(t)-\bar{u}\|_2/\|\bar{u}\|_2$ versus time. The solution
+%   is considered settled when the metric drops below $10^{-4}$.}
+%   \label{fig:convergence}
+% \end{figure}
+
+\subsection{Grid Sensitivity (Optional but Recommended)}
+Briefly show that results are mesh-independent (e.g., $21\times 21$, $31\times 31$).
+
+\section{Discussion}
+Interpret results: solver performance, convergence trends, stability constraints (if explicit),
+and any numerical issues (boundary treatment, corners, conditioning, etc.).
+
+\section{Conclusion}
+Summarize the main takeaways in 4--6 sentences. Clearly state the final reported settling time
+and the steady-state match.
+
+% ============================
+% References
+% ============================
+\bibliographystyle{aapmrev4-2}
+% Option A: BibTeX file (recommended)
+\bibliography{references}
+
+% Option B: Manual references (if you don't want BibTeX)
+% \begin{thebibliography}{99}
+% \bibitem{smith2020} J. Smith, \textit{Numerical PDEs} (Publisher, 2020).
+% \end{thebibliography}
+
+\end{document}
