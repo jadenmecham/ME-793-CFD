@@ -63,6 +63,13 @@ and its steady-state Poisson equation,
 \end{equation}
 List the mixed boundary conditions on each side of the square domain.
 
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{contour_kappa.png}
+  \caption{Contour of source term $\kappa(x,y)$.}
+  \label{fig:domain}
+\end{figure}
+
 \section{Numerical Method}
 \subsection{Grid and Discretization}
 Describe the uniform grid, $h_x$, $h_y$, indexing, and the second-order central stencil.
@@ -85,7 +92,7 @@ Show the contour/heatmap of $\bar{u}(x,y)$ and discuss qualitative behavior.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{Sol.pdf}
+  \includegraphics[width=\linewidth]{solution_contour.png}
   \caption{Steady-state solution $\bar{u}(x,y)$ obtained by solving the Poisson equation
   using second-order finite differences and conjugate gradient.}
   \label{fig:poisson}
