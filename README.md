@@ -3,4 +3,4 @@ Spring 2026. In class demos, homework, and project files. The objective of this 
 
 ## Project 1 - Numerical Solutions to Elliptic PDEs
 
-[Animation](project_1/solution_animation.gif)
+![Animation](project_1/solution_animation.gif)
