@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import scipy as sp
 from scipy.sparse import spdiags
 import matplotlib.patheffects as pe
+import matplotlib.animation as animation
 
 # -------------------------#
 # Laplace matrix functions #
@@ -182,3 +183,95 @@ def crank_nicolson(Nx, Ny, index, dx, dy, dt, alpha, k_flat, U_ss,
 # -------------------------#
 # Plotters                 #
 # -------------------------#
+
+def plot_source_and_steady_state(X, Y, k, U_ss):
+    # source term contour
+    plt.figure()
+    plt.contourf(X, Y, k, levels=8, cmap='plasma', alpha=0.75)
+    plt.colorbar(label=r'$\kappa(x,y)$')
+    c = plt.contour(X, Y, k, levels=8, cmap='plasma', linewidths=2.5)
+    plt.clabel(c, inline=True, fontsize=8, colors='black', fmt='%.3f')
+    plt.xlabel(r'$x$')
+    plt.ylabel(r'$y$')
+    plt.savefig('contour_kappa.png', dpi=300)
+    plt.show()
+
+    # steady-state solution contour
+    plt.figure()
+    colormap = 'plasma'
+    cf = plt.contourf(X, Y, U_ss, levels=12, cmap=colormap, alpha=0.75, zorder=1)
+    plt.colorbar(cf, label=r'$\tilde{u}(x,y)$')
+    c = plt.contour(X, Y, U_ss, levels=12, cmap=colormap, linewidths=2.5, zorder=5)
+    plt.clabel(c, inline=True, fontsize=8, fmt='%0.1f', zorder=10, colors='black')
+    plt.xlabel(r'$x$')
+    plt.ylabel(r'$y$')
+    plt.savefig('solution_contour.png', dpi=300)
+    plt.show()
+
+
+def plot_transient_timesteps(X, Y, history, steps_to_plot=None):
+    if steps_to_plot is None:
+        steps_to_plot = [0, 50, 150, 300, 600, 1000, 2500, -1]
+
+    labels = [f't = {history[s][0]:.2f}' for s in steps_to_plot[:-1]] + \
+             [rf'$t = {history[-1][0]:.2f},\ \tilde{{u}}$ (steady state)']
+    vmin = min(history[s][1].min() for s in steps_to_plot)
+    vmax = max(history[s][1].max() for s in steps_to_plot)
+
+    colormap = 'plasma'
+    levels = np.linspace(vmin, vmax, 12)
+
+    fig, axes = plt.subplots(2, 4, figsize=(18, 8))
+    axes = axes.flatten()
+
+    for ax, step, label in zip(axes, steps_to_plot, labels):
+        _, U_plot = history[step]
+        ax.contourf(X, Y, U_plot, levels=levels, cmap=colormap, alpha=0.75, vmin=vmin, vmax=vmax, zorder=1)
+        c  = ax.contour( X, Y, U_plot, levels=levels, cmap=colormap, linewidths=1.5, vmin=vmin, vmax=vmax, zorder=5)
+        ax.clabel(c, inline=True, fontsize=7, fmt='%0.1f', zorder=10, colors='black')
+        ax.set_title(label, fontsize=11)
+        ax.set_xlabel(r'$x$')
+        ax.set_ylabel(r'$y$')
+
+    fig.subplots_adjust(right=0.88, hspace=0.35, wspace=0.3)
+    cbar_ax = fig.add_axes([0.91, 0.1, 0.02, 0.8])
+    sm = plt.cm.ScalarMappable(cmap=colormap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+    fig.colorbar(sm, cax=cbar_ax, label=r'$u(x,y,t)$')
+
+    plt.savefig('solution_timesteps.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def generate_animation(X, Y, history, filename='solution_animation.gif'):
+    colormap = 'plasma'
+    vmin = min(h[1].min() for h in history)
+    vmax = max(h[1].max() for h in history)
+    levels = np.linspace(vmin, vmax, 12)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+
+    ax.contourf(X, Y, history[0][1], levels=levels, cmap=colormap, alpha=0.75, vmin=vmin, vmax=vmax)
+    c  = ax.contour( X, Y, history[0][1], levels=levels, cmap=colormap, linewidths=1.5, vmin=vmin, vmax=vmax)
+    ax.clabel(c, inline=True, fontsize=7, fmt='%0.1f', colors='black')
+    ax.set_title(f't = {history[0][0]:.2f}', fontsize=12)
+    ax.set_xlabel(r'$x$')
+    ax.set_ylabel(r'$y$')
+
+    sm = plt.cm.ScalarMappable(cmap=colormap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+    fig.colorbar(sm, ax=ax, label=r'$u(x,y,t)$')
+
+    def update(frame):
+        ax.cla()
+        t_val, U_plot = history[frame]
+        ax.contourf(X, Y, U_plot, levels=levels, cmap=colormap, alpha=0.75, vmin=vmin, vmax=vmax)
+        c  = ax.contour( X, Y, U_plot, levels=levels, cmap=colormap, linewidths=1.5, vmin=vmin, vmax=vmax)
+        ax.clabel(c, inline=True, fontsize=7, fmt='%0.1f', colors='black')
+        ax.set_title(f't = {t_val:.2f}', fontsize=12)
+        ax.set_xlabel(r'$x$')
+        ax.set_ylabel(r'$y$')
+
+    ani = animation.FuncAnimation(fig, update, frames=range(0, len(history), 10), interval=100, repeat=True)
+    ani.save(filename, writer='pillow', dpi=150)
+    print('Animation saved!')
+    plt.show()
+
