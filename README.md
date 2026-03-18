@@ -1,6 +1,4 @@
-# ME 793 - Computational Fluid Dynamics
-Spring 2026. In class demos, homework, and project files. The objective of this class is to learn the underlying mechanisms behind CFD solvers, NOT how to use these software.
-
 ## Project 1 - Numerical Solutions to Elliptic PDEs
+Find the steady state and transient solution to a 2D heat equation with a source term where the steady state solution satisfies the Poisson equation. View the [report](project_1/report.pdf) and [code](project_1/project_1.ipynb).
 
 ![Animation](project_1/solution_animation.gif)
