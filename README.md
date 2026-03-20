@@ -4,3 +4,6 @@ source term. The steady-state solution satisfies the Poisson equation, solved us
 finite differences and Crank--Nicolson time integration. View the [report](project_1/project_1_report.pdf) and [code](project_1/project_1.ipynb).
 
 ![Animation](project_1/solution_animation.gif)
+
+## Project 2: Numerical Solutions to Incompressible Navier–Stokes Equations
+
