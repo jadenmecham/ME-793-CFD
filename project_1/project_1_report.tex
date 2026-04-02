@@ -216,6 +216,14 @@ the Poisson equation.
   \label{fig:poisson}
 \end{figure}
 
+\begin{figure*}
+  \centering
+  \includegraphics[width=\linewidth]{solution_timesteps.png}
+  \caption{Transient solution $u(x,y,t)$ at selected timesteps, marching from
+  $u(x,y,0)=0$ to steady state using Crank--Nicolson time integration.}
+  \label{fig:transient}
+\end{figure*}
+
 Along the North boundary, the solution shows 3 sinks corresponding to the 3 peaks in the 
 Dirichlet condition. The solution also shows a peak in the southeast corner, which is influenced 
 by the Neumann condition and the source term $\kappa(x,y)$. Furthermore, the southwest corner
@@ -231,32 +239,58 @@ The transient solution converges to the steady state at $t^* = 362.4$
 (3624 timesteps at $dt = 0.1$), satisfying the convergence criterion based on the $L^2$ norm 
 of the difference between the transient and steady-state solutions.
 
-\begin{figure*}
-  \centering
-  \includegraphics[width=\linewidth]{solution_timesteps.png}
-  \caption{Transient solution $u(x,y,t)$ at selected timesteps, marching from
-  $u(x,y,0)=0$ to steady state using Crank--Nicolson time integration.}
-  \label{fig:transient}
-\end{figure*}
-
-
 \subsection{Grid Sensitivity (Optional but Recommended)}
 Briefly show that results are mesh-independent (e.g., $21\times 21$, $31\times 31$).
 
 \section{Discussion}
-Interpret results: solver performance, convergence trends, stability constraints (if explicit),
-and any numerical issues (boundary treatment, corners, conditioning, etc.).
+
+The results confirm the expected physical behavior of a diffusion system driven by mixed
+boundary conditions and a localized source. The direct Poisson solution and the long-time
+limit of the Crank--Nicolson transient simulation are in agreement, providing
+validation of both implementations.
+
+The features of the steady-state solution are governed primarily by the Dirichlet
+boundaries. The three sinks along the north boundary arise directly from the three full
+periods of $\sin(4\pi x - \pi/2)$, while the cosine variation on the
+west boundary establishes the large-scale gradient that drives heat from the interior
+toward $x = 0$. The source $\kappa(x,y)$, centered near $(0.7, 0.6)$, produces
+a peak in the southeastern interior. The zero-flux condition on the east
+boundary ($\partial_x u = 0$) acts as a reflective wall,
+while the constant negative flux on the south boundary ($\partial_y u = -0.3$) draws heat
+out of the domain, contributing to the sink visible in the southwest corner.
+
+The Crank--Nicolson scheme was chosen over other methods because it is
+unconditionally stable, allowing a large timestep $dt = 0.1$.
+The second-order temporal accuracy of Crank--Nicolson also ensures that the solution
+trajectory is well-resolved even at this larger step size.
+The conjugate gradient solver converged within the prescribed $10^{-6}$ relative
+residual tolerance at each timestep.
 
 \section{Conclusion}
-Summarize the main takeaways in 4--6 sentences. Clearly state the final reported settling time
-and the steady-state match.
+
+This project demonstrated a complete numerical solution workflow for the two-dimensional
+heat equation with a spatially varying source term. The spatial domain was discretized
+on a $50\times50$ uniform grid using second-order central finite differences, yielding a
+sparse linear system solved by the conjugate gradient method to obtain the direct
+steady-state (Poisson) solution. The transient problem was integrated in time using the
+Crank--Nicolson scheme, which provided unconditional stability and second-order temporal
+accuracy, enabling a timestep of $dt = 0.1$ and convergence to steady state at
+$t^* = 362.4$.
+
+The transient solution at long times closely matched the direct Poisson solution,
+confirming the correctness of both implementations. The solution structure—three
+boundary-driven sinks along the north, a localized interior peak from the Gaussian source,
+and a flux-driven sink in the southwest—is physically consistent with the imposed mixed
+boundary conditions.
+
+Overall, the combination of second-order spatial discretization, an efficient iterative
+solver, and an unconditionally stable implicit time integrator proved well-suited to this
+class of elliptic and parabolic PDE problems.
+
 
 % ============================
 % References
 % ============================
-\bibliographystyle{aapmrev4-2}
-% Option A: BibTeX file (recommended)
-\bibliography{references}
 
 % Option B: Manual references (if you don't want BibTeX)
 % \begin{thebibliography}{99}
