@@ -35,9 +35,29 @@ def D(vel, delta, ip, iu, iv, nx, ny, n_cells):
 def L():
     pass
 
-# boundary condition vecotrs
-def bc_D():
-    pass
+# boundary condition vectors
+def bc_D(uBC_L, uBC_R, vBC_B, vBC_T, delta, ip, nx, ny, n_cells):
+    """
+    Divergence BC correction vector.
+
+    The homogeneous D skips wall faces (not stored in vel). This vector
+    supplies the missing normal-flux contributions at each wall:
+      Left  wall: west u-face of cells (0, j)    → -uBC_L / Δx
+      Right wall: east u-face of cells (nx-1, j) → +uBC_R / Δx
+      Bottom wall: south v-face of cells (i, 0)  → -vBC_B / Δy
+      Top   wall: north v-face of cells (i, ny-1)→ +vBC_T / Δy
+
+    BCs can be scalars (uniform wall) or 1-D arrays (per-cell wall).
+    """
+    bcd_2d = np.zeros((nx, ny))
+    bcd_2d[0,    :] -= np.asarray(uBC_L) / delta   # left wall
+    bcd_2d[nx-1, :] += np.asarray(uBC_R) / delta   # right wall
+    bcd_2d[:,    0] -= np.asarray(vBC_B) / delta   # bottom wall
+    bcd_2d[:, ny-1] += np.asarray(vBC_T) / delta   # top wall
+
+    bcd = np.zeros(n_cells)
+    bcd[ip] = bcd_2d
+    return bcd
 
 def bc_L():
     pass

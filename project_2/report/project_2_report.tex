@@ -46,13 +46,83 @@
 % ============================
 
 \section{Introduction}
-
+The objective of this project is to develop a numerical solver for the incompressible 
+Navier–Stokes equations, which govern the flow of viscous fluids. 
+We will implement a fractional step method with 2nd order Adams-Bashford time 
+integration for the advection term and Crank-Nicolson for the viscous term.
+We also compare the results to the results reported in the paper by Ghia et al.
+For this project, we will focus on the lid-driven cavity flow problem, which is a 
+classic benchmark case for validating numerical solvers for incompressible flows.
 
 \section{Governing Equations and Boundary Conditions}
 
+The governing equations for incompressible flow are the Navier–Stokes equations, 
+which consist of the continuity equation and the momentum equations. 
+The continuity equation ensures mass conservation and is given by:
+
+\begin{equation}
+  \nabla \cdot \mathbf{u} = 0
+\end{equation}
+where $\mathbf{u}$ is the velocity vector.
+The momentum equations describe the conservation of momentum and are given by:
+\begin{equation}
+  \frac{\partial \mathbf{u}}{\partial t} + (\mathbf{u} \cdot \nabla) \mathbf{u} = -\nabla p + \nu \nabla^2 \mathbf{u}
+\end{equation}
+where $p$ is the pressure, $\nu$ is the kinematic viscosity, and $t$ is time.
+For the lid-driven cavity problem, we consider a square domain with the following 
+boundary conditions:
+\begin{itemize}
+  \item No-slip boundary condition on the bottom and side walls: $\mathbf{u} = 0$
+  \item Moving lid at the top wall: $\mathbf{u} = (U, 0)$, where $U$ is the lid velocity
+  \item Initial condition: $\mathbf{u} = 0$ everywhere at $t=0$
+  \item Reynolds number defined as $Re = \frac{UL}{\nu}$, where $L$ is the length of the cavity
+\end{itemize}
+
+\section{Operators}
+The following operators are used in the numerical method to discretize the 
+governing equations:
+
+\subsection{Gradient Operator ($\mathbf{G}$)}
+The gradient operator is discretized using central differences for the 
+interior points and one-sided differences for the boundary points. It maps 
+pressure difference to velocity face values using the following formulas:
+\begin{equation}
+  (\mathbf{G}p)^u_{i,j} = \frac{p_{i,j} - p_{i-1,j}}{\Delta x}, \quad
+  (\mathbf{G}p)^v_{i,j} = \frac{p_{i,j} - p_{i,j-1}}{\Delta y}
+\end{equation}  
+
+\subsection{Divergence Operators ($\mathbf{D}$ and $\mathbf{bc}_D$)}
+The divergence operator is discretized using central differences for the 
+interior points and one-sided differences for the boundary points. It maps
+velocity face values to cell-centered divergence. 
+The central points are calculated using the following formula:
+\begin{equation}
+  (\mathbf{D}\mathbf{u})_{i,j} = \frac{u_{i+1,j} - u_{i,j}}{\Delta x} + \frac{v_{i,j+1} - v_{i,j}}{\Delta y}
+\end{equation}
+The full divergence operator is split into the sum of the interior and boundary 
+contributions. The boundary contribution at each wall is given in the following 
+table:
+
+
+\subsection{Laplacian Operators ($\mathbf{L}$ and $\mathbf{bc}_L$)}
+For the interior points:
+\begin{equation}
+  (\mathbf{L}\mathbf{u})_{i,j} = \frac{u_{i+1,j} - 2u_{i,j} + u_{i-1,j}}{\Delta x^2} + \frac{u_{i,j+1} - 2u_{i,j} + u_{i,j-1}}{\Delta y^2}
+\end{equation}
+
+\subsection{Advection Operator ($\mathbf{A}$)}
+
+\subsection{Conjugate Gradient Solver}
+
+\subsection{Unit Testing}
+
 \section{Numerical Method}
 
-\section{Results}
+\subsection{Grid and Discretization}
+We use a uniform Cartesian grid with $N \times N$ cells to discretize the domain
+and apply a staggered grid arrangement for the velocity and pressure fields.
+
+
 
 \section{Discussion}
 
