@@ -1,10 +1,12 @@
 % ============================
-% REVTeX 4.2e (revtex4-2) + AAPM Template
+% ME 793 – Computational Fluid Dynamics
+% Project 2 Report Template
+% REVTeX 4.2e (revtex4-2) + AAPM class
 % ============================
 \documentclass[
   aapm,
   amsmath,amssymb,
-  reprint,          % journal-like two-column layout
+  reprint,          % two-column journal-like layout
   %preprint,        % uncomment for single-column draft
   floatfix
 ]{revtex4-2}
@@ -12,78 +14,89 @@
 % ----------------------------
 % Packages
 % ----------------------------
-\usepackage{graphicx}   % figures
-\usepackage{dcolumn}    % decimal-aligned columns in tables
-\usepackage{bm}         % bold math
-\usepackage{siunitx}    % SI units (optional, nice for reports)
-\usepackage{hyperref}   % hyperlinks
-\usepackage{placeins}
-
-% Optional: nicer captions (REVTeX already formats captions well)
-% \usepackage[labelfont=bf]{caption}
+\usepackage{graphicx}       % figures
+\usepackage{dcolumn}        % decimal-aligned table columns
+\usepackage{bm}             % bold math symbols
+\usepackage{siunitx}        % SI units (optional, but useful)
+\usepackage{hyperref}       % clickable references/links
+\usepackage{algorithm2e}    % pseudocode (optional)
+\usepackage{tabularx}
 
 % ----------------------------
 % Title block
 % ----------------------------
 \begin{document}
 
-\title{Project 2:Numerical Solutions to Incompressible Navier–Stokes Equations} % <-- change title
+\title{Project 2: Numerical Solutions to Incompressible Navier--Stokes Equations}
 
 \author{Jaden Mecham}
-\email{jadenmecham@unr.edu} % optional
+\email{jadenmecham@unr.edu}
 \affiliation{Department of Mechanical Engineering, University of Nevada, Reno}
 
 \date{\today}
 
 \begin{abstract}
-  abstract here. 
+%
+% Write 100--200 words covering:
+%   (1) the problem (lid-driven cavity, incompressible N-S),
+%   (2) numerical method (fractional-step, AB2 advection, CN diffusion, staggered grid),
+%   (3) validation strategy (Ghia et al.\ benchmark, Reynolds numbers tested),
+%   (4) key findings (accuracy, grid/temporal convergence rates, any interesting physics).
+%
+Write a concise abstract here. State the governing equations solved, the numerical
+scheme implemented (fractional-step method with second-order Adams--Bashforth
+advection and Crank--Nicolson diffusion on a staggered grid), the Reynolds numbers
+investigated, and key findings regarding accuracy and physical behavior of the
+lid-driven cavity flow.
 \end{abstract}
 
 \maketitle
 
 % ============================
-% Main text
+\section{Introduction}
+% ============================
+%
+% Suggested content (2--3 paragraphs):
+%   - Motivate the lid-driven cavity as a canonical benchmark for incompressible CFD.
+%   - Briefly introduce the fractional-step (projection) method and its significance
+%     for decoupling velocity and pressure in incompressible flow.
+%   - State the objectives: implement the solver from scratch, validate against
+%     Ghia et al.\ \citep{ghia1982}, and explore additional cases.
+%
+Introduce the lid-driven cavity problem and its role as a standard benchmark in
+incompressible CFD~\citep{ghia1982}. Briefly explain why it is nontrivial (recirculating
+flow, corner vortices, Re-dependent topology) and what makes the fractional-step
+method~\citep{perot1993} an effective approach for incompressible flows.
+
+% ============================
+\section{Governing Equations}
+% ============================
+%
+% State the 2-D incompressible Navier--Stokes equations (dimensionless form):
+%   momentum equation, continuity equation, boundary conditions.
+% Define all symbols (q, p, Re, etc.).
+%
+The dimensionless 2-D incompressible Navier--Stokes equations are
+\begin{equation}
+  \frac{\partial \bm{q}}{\partial t} + \bm{q}\cdot\nabla\bm{q}
+  = -\nabla p + \frac{1}{Re}\nabla^2\bm{q},
+  \label{eq:momentum}
+\end{equation}
+\begin{equation}
+  \nabla\cdot\bm{q} = 0,
+  \label{eq:continuity}
+\end{equation}
+where $\bm{q}=\{u,v\}$ is the velocity field, $p$ is pressure, and $Re$ is the
+Reynolds number. Describe the boundary conditions (no-slip on three walls; lid
+velocity $u_\text{top}=1$ on the top boundary).
+
+% ============================
+\section{Operators}
 % ============================
 
-\section{Introduction}
-The objective of this project is to develop a numerical solver for the incompressible 
-Navier–Stokes equations, which govern the flow of viscous fluids. 
-We will implement a fractional step method with 2nd order Adams-Bashford time 
-integration for the advection term and Crank-Nicolson for the viscous term.
-We also compare the results to the results reported in the paper by Ghia et al.
-For this project, we will focus on the lid-driven cavity flow problem, which is a 
-classic benchmark case for validating numerical solvers for incompressible flows.
+\subsection{Gradient Operator}
 
-\section{Governing Equations and Boundary Conditions}
-
-The governing equations for incompressible flow are the Navier–Stokes equations, 
-which consist of the continuity equation and the momentum equations. 
-The continuity equation ensures mass conservation and is given by:
-
-\begin{equation}
-  \nabla \cdot \mathbf{u} = 0
-\end{equation}
-where $\mathbf{u}$ is the velocity vector.
-The momentum equations describe the conservation of momentum and are given by:
-\begin{equation}
-  \frac{\partial \mathbf{u}}{\partial t} + (\mathbf{u} \cdot \nabla) \mathbf{u} = -\nabla p + \nu \nabla^2 \mathbf{u}
-\end{equation}
-where $p$ is the pressure, $\nu$ is the kinematic viscosity, and $t$ is time.
-For the lid-driven cavity problem, we consider a square domain with the following 
-boundary conditions:
-\begin{itemize}
-  \item No-slip boundary condition on the bottom and side walls: $\mathbf{u} = 0$
-  \item Moving lid at the top wall: $\mathbf{u} = (U, 0)$, where $U$ is the lid velocity
-  \item Initial condition: $\mathbf{u} = 0$ everywhere at $t=0$
-  \item Reynolds number defined as $Re = \frac{UL}{\nu}$, where $L$ is the length of the cavity
-\end{itemize}
-
-\section{Operators}
-The following operators are used in the numerical method to discretize the 
-governing equations:
-
-\subsection{Gradient Operator ($\mathbf{G}$)}
-The gradient operator is discretized using central differences for the 
+The gradient operator ($\mathbf{G}$) is discretized using central differences for the 
 interior points and one-sided differences for the boundary points. It maps 
 pressure difference to velocity face values using the following formulas:
 \begin{equation}
@@ -91,8 +104,9 @@ pressure difference to velocity face values using the following formulas:
   (\mathbf{G}p)^v_{i,j} = \frac{p_{i,j} - p_{i,j-1}}{\Delta y}
 \end{equation}  
 
-\subsection{Divergence Operators ($\mathbf{D}$ and $\mathbf{bc}_D$)}
-The divergence operator is discretized using central differences for the 
+\subsection{Divergence Operators}
+
+The divergence operator ($\mathbf{D}$) is discretized using central differences for the 
 interior points and one-sided differences for the boundary points. It maps
 velocity face values to cell-centered divergence. 
 The central points are calculated using the following formula:
@@ -100,34 +114,260 @@ The central points are calculated using the following formula:
   (\mathbf{D}\mathbf{u})_{i,j} = \frac{u_{i+1,j} - u_{i,j}}{\Delta x} + \frac{v_{i,j+1} - v_{i,j}}{\Delta y}
 \end{equation}
 The full divergence operator is split into the sum of the interior and boundary 
-contributions. The boundary contribution at each wall is given in the following 
-table:
+contributions. The boundary contribution ($\mathbf{bc}_D$) at each wall is given in the 
+following table:
 
-
-\subsection{Laplacian Operators ($\mathbf{L}$ and $\mathbf{bc}_L$)}
+\subsection{Laplacian Operators}
 For the interior points:
 \begin{equation}
   (\mathbf{L}\mathbf{u})_{i,j} = \frac{u_{i+1,j} - 2u_{i,j} + u_{i-1,j}}{\Delta x^2} + \frac{u_{i,j+1} - 2u_{i,j} + u_{i,j-1}}{\Delta y^2}
 \end{equation}
 
-\subsection{Advection Operator ($\mathbf{A}$)}
+\subsection{Advection Operator}
 
-\subsection{Conjugate Gradient Solver}
+\subsection{Unit Testing of Operators}
 
-\subsection{Unit Testing}
+\begin{table*}[ht]
+\centering
+\caption{Unit tests for discrete operators, verifying correctness of each component.}
+\begin{tabular}{ccccc}
+\hline
+Test & Operator & What is checked & Expected result & Pass? \\
+\hline
+G1 & \textbf{G} & Gradient of linear $p$ & Exact (machine $\varepsilon$) & $\checkmark$ \\
+G2 & \textbf{G} & Gradient of quadratic $p$ & Error $O(\Delta x^2)$ & $\checkmark$ \\
+D1 & \textbf{DG} & Composition $\approx \nabla^2$ & Error $O(\Delta x^2)$ interior & $\checkmark$ \\
+D2 & \textbf{D} & Divergence of div-free field & Error $O(\Delta x^2)$ interior & $\checkmark$ \\
+D3 & \textbf{D}, \textbf{G} & Adjoint: $\boldsymbol{u}^\top \textbf{G} \boldsymbol{p} = \boldsymbol{p}^\top \textbf{D} \boldsymbol{u}$ & Machine $\varepsilon$ & $\checkmark$ \\
+BC1 & $\mathbf{bc}_D$ & Global mass balance $\sum \mathbf{bc}_D = 0$ & Exact & $\checkmark$ \\
+BC2 & $\mathbf{bc}_L$ & Top-wall BC value $= 2U^*/\Delta y^2$ & Exact & $\checkmark$ \\
+L1 & \textbf{L} & Laplacian of quadratic field $= 2$ & Exact interior & $\checkmark$ \\
+L2 & \textbf{L} & Laplacian of linear field $= 0$ & Machine $\varepsilon$ & $\checkmark$ \\
+L3 & \textbf{L} & Self-adjoint: $\boldsymbol{u}^\top \textbf{L} \boldsymbol{v} = \boldsymbol{v}^\top \textbf{L} \boldsymbol{u}$ & Machine $\varepsilon$ & $\checkmark$ \\
+A1 & \textbf{A} & Uniform flow gives zero advection & Machine $\varepsilon$ & $\checkmark$ \\
+A2 & \textbf{A} & Energy: $\boldsymbol{u}^\top \textbf{A}(\boldsymbol{u}) \approx 0$ & Small $(O(\Delta x^2))$ & $\checkmark$ \\
+CG1 & CG & Solves Poisson problem to tolerance & $<$ tol & $\checkmark$ \\
+FULL & \textbf{T} & $\boldsymbol{p}^\top \textbf{T} \boldsymbol{p} > 0$ (SPD) & Positive & $\checkmark$ \\
+\hline
+\end{tabular}
+\end{table*}
 
+% ============================
 \section{Numerical Method}
+% ============================
 
-\subsection{Grid and Discretization}
-We use a uniform Cartesian grid with $N \times N$ cells to discretize the domain
-and apply a staggered grid arrangement for the velocity and pressure fields.
+\subsection{Staggered Grid Formulation}
+%
+% Describe:
+%   - Uniform staggered grid: u at horizontal faces, v at vertical faces, p at cell centers.
+%   - Grid sizes: u is (nx-1)xny, v is nx x(ny-1), p is nx x ny.
+%   - Pinned pressure reference (bottom-left cell, p=0).
+%   - Include a schematic figure if possible.
+%
+Describe the staggered grid layout with velocity components defined at cell faces
+and pressure at cell centers. State the grid dimensions for each variable and
+the pressure reference condition.
+
+\begin{figure}[t]
+  \centering
+  %\includegraphics[width=0.85\linewidth]{figs/staggered_grid.pdf}
+  % Replace with your own staggered grid schematic
+  \caption{Staggered grid formulation. Horizontal velocity $u$ ({\large$\rightarrow$}),
+    vertical velocity $v$ ({\large$\uparrow$}), and pressure $p$ (\ensuremath{\blacksquare})
+    are located at cell faces and cell centers, respectively. The open circle ({\large$\circ$})
+    marks the pinned pressure reference.}
+  \label{fig:grid}
+\end{figure}
+
+\subsection{Spatial Discretization}
+%
+% Summarize the discrete operators: D (divergence), G (gradient), N (advection), L (Laplacian).
+% State order of accuracy for each (central differencing for N and L gives 2nd order;
+% D and G are 1st order forward/backward but consistent on staggered grids).
+%
+Introduce the discrete divergence ($D$), gradient ($G$), advection ($N$), and
+Laplacian ($L$) operators. State their orders of accuracy and discretization stencils.
+
+\subsection{Time Integration: Fractional-Step Method}
+%
+% Derive the 3-step projection scheme from the block LU decomposition of the
+% coupled saddle-point system.
+% Show the three equations:
+%   Step 1 (intermediate velocity):  A q* = r^n + bc1
+%   Step 2 (pressure Poisson):       D dt G p^{n+1} = D q*
+%   Step 3 (velocity projection):    q^{n+1} = q* - dt G p^{n+1}
+%
+Using second-order Adams--Bashforth for advection and Crank--Nicolson for diffusion,
+the semi-discrete momentum equation and continuity constraint form the saddle-point
+system~\citep{perot1993}
+\begin{equation}
+  \begin{pmatrix} A & G \\ D & 0 \end{pmatrix}
+  \begin{pmatrix} \bm{q}^{n+1} \\ p^{n+1} \end{pmatrix}
+  = \begin{pmatrix} \bm{r}^n + \text{bc}_1 \\ 0 \end{pmatrix},
+  \label{eq:saddle}
+\end{equation}
+where $A = I/\Delta t - L/(2 Re)$ and $\bm{r}^n$ contains the explicit
+Adams--Bashforth advection and Crank--Nicolson diffusion terms. Applying block LU
+decomposition and approximating $A^{-1}\approx\Delta t\,I$ yields the three-step
+fractional-step algorithm:
+\begin{align}
+  A\bm{q}^{*} &= \bm{r}^n + \text{bc}_1,    \label{eq:step1}\\
+  D\,\Delta t\,G\,p^{n+1} &= D\bm{q}^{*},   \label{eq:step2}\\
+  \bm{q}^{n+1} &= \bm{q}^{*} - \Delta t\,G\,p^{n+1}. \label{eq:step3}
+\end{align}
+The intermediate velocity system~\eqref{eq:step1} and pressure Poisson
+equation~\eqref{eq:step2} are solved at each time step using a conjugate gradient
+method~\citep{shewchuk1994}.
+
+\subsection{Time Step and Stopping Criterion}
+%
+% State the CFL-based time step:
+%   dt = min(CFL * dx / u_top,  CFL * dx^2 * Re)
+% and the steady-state criterion:
+%   max(|q^{n+1} - q^n|) < 1e-8
+%
+The time step is chosen as
+\begin{equation}
+  \Delta t = \min\!\left(\text{CFL}\,\frac{\Delta x}{u_\text{top}},\;
+             \text{CFL}\,(\Delta x)^2 Re\right),
+\end{equation}
+and time integration proceeds until the steady-state criterion
+$\max|\bm{q}^{n+1}-\bm{q}^n|<10^{-8}$ is satisfied.
+
+% ============================
+\section{Results}
+% ============================
+
+\subsection{Grid and Temporal Convergence}
+%
+% Show two convergence plots (log-log) for a chosen monitor quantity
+% (e.g., v at cavity center x=0.5, y=0.5):
+%   (a) Temporal convergence vs. CFL -- expect slope ~1 (first-order in time
+%       due to the A^{-1} ~ dt I approximation).
+%   (b) Spatial convergence vs. N -- expect slope ~2 (second-order in space).
+% State the production grid (N=128, CFL=0.5) selected for validation runs.
+%
+Present log--log convergence plots for vertical velocity $v$ at the cavity
+center $(x,y)=(0.5,0.5)$.
+
+\begin{figure}[t]
+  \centering
+ % \includegraphics[width=\linewidth]{figs/convergence.pdf}
+  \caption{(a) Temporal convergence versus CFL and (b) spatial convergence versus
+    grid size $N$ for $v$ at the cavity center. Reference lines indicate the
+    expected convergence rates.}
+  \label{fig:convergence}
+\end{figure}
+
+\subsection{Validation Against Ghia et al.}
+%
+% Compare your results to Tables 1 & 2 and Figures 3 & 4 of Ghia et al. (1982).
+% Required plots:
+%   (a) u along the vertical centerline x=0.5
+%   (b) v along the horizontal centerline y=0.5
+%   (c) Vorticity omega along the top wall y=1
+% Show for Re = {100, 400, 1000, 3200, 5000} (or a subset).
+% Discuss accuracy and sources of discrepancy at high Re.
+%
+Figure~\ref{fig:centerlines} compares centerline velocities and top-wall vorticity
+to the reference data of Ghia, Ghia, and Shin~\citep{ghia1982} for
+$Re = \{100,\,400,\,1000,\,3200,\,5000\}$.
+
+\begin{figure}[t]
+  \centering
+  %\includegraphics[width=\linewidth]{figs/centerlines.pdf}
+  \caption{(a)~Horizontal velocity $u$ along the vertical centerline $x=0.5$,
+    (b)~vertical velocity $v$ along the horizontal centerline $y=0.5$, and
+    (c)~vorticity $\omega$ along the top wall $y=1.0$ for several Reynolds numbers.
+    Solid lines: present simulation; symbols: Ghia et al.~\citep{ghia1982}.}
+  \label{fig:centerlines}
+\end{figure}
+
+\subsection{Streamline Topology}
+%
+% Show streamline contour plots for Re = {100, 1000, 3200} side-by-side with
+% the corresponding panels from Ghia et al. (or discuss qualitatively).
+% Describe the primary recirculation and secondary corner vortices.
+% Note the appearance of a third vortex near the top-left corner at Re=3200.
+%
+Figure~\ref{fig:streamlines} shows streamline patterns for
+$Re=\{100,\,1000,\,3200\}$. Discuss the evolution of the primary vortex center
+and the growth of secondary corner vortices with increasing Reynolds number.
+
+\begin{figure}[t]
+  \centering
+  %\includegraphics[width=\linewidth]{figs/streamlines.pdf}
+  \caption{Streamline contours at $Re=100$ (top), $1000$ (middle), and $3200$
+    (bottom). Left column: present simulation; right column: Ghia et al.~\citep{ghia1982}.}
+  \label{fig:streamlines}
+\end{figure}
+
+\subsection{Vorticity Contours}
+%
+% Show filled vorticity contours for Re = {100, 1000, 3200} and compare to Ghia.
+% Note the thin boundary layers and increased vorticity gradients at higher Re.
+%
+Present vorticity contours and compare qualitatively and quantitatively to the
+reference~\citep{ghia1982}. Discuss boundary-layer thinning at higher $Re$ and
+any limitations of the uniform-grid approach.
 
 
+\subsection{Additional Exploration}
+%
+% This section is required -- go BEYOND the base deliverables.
+% Ideas (choose one or more):
+%   - Higher Re cases (Re=7500, 10000): do secondary instabilities appear?
+%   - Pressure field contours and discussion
+%   - Divergence-free residual ||Dq^{n+1}|| vs. iteration
+%   - Effect of non-uniform / refined grids near walls
+%   - Comparison of CG iteration counts vs. Re
+%   - Time evolution (transient snapshots before steady state)
+%
+Present additional results that go beyond the required validation. For example, ...
 
+% ============================
 \section{Discussion}
+% ============================
+%
+% Discuss:
+%   - Why temporal accuracy is first-order (A^{-1} ~ dt I approximation in LU splitting)
+%   - Why spatial accuracy is second-order (consistent staggered operators, central diff)
+%   - Sources of error at high Re: insufficient grid resolution near walls,
+%     slow convergence to steady state requiring many convective time units
+%   - Physical interpretation: vortex merging, corner eddy growth, etc.
+%
+Discuss the observed convergence rates in light of the numerical scheme, the
+accuracy of results at varying Reynolds numbers, and physical observations from
+the flow field. Address any discrepancies with the reference data.
 
-
+% ============================
 \section{Conclusion}
+% ============================
+%
+% 4--6 sentences summarizing:
+%   - What was implemented and validated
+%   - Convergence properties
+%   - Key physical findings
+%   - Limitations and potential improvements (non-uniform grid, higher-order splitting)
+%
+Summarize the key findings of the project in 4--6 sentences. State clearly the
+validated Reynolds number range, convergence rates observed, and any limitations
+identified.
 
+% ============================
+% References
+% ============================
+\bibliographystyle{aapmrev4-2}
+\bibliography{references}
+
+% ============================
+% Appendix: Code listing
+% (NOT counted toward 10-page limit -- print/export your code as PDF and append)
+% ============================
+\appendix
+\section*{Note on Code Submission}
+Your MATLAB/Python code should be appended \emph{after} the references as a
+separate PDF printout. It does not count toward the 10-page limit and does
+not need to appear in the \LaTeX{} source.
 
 \end{document}
