@@ -63,10 +63,23 @@ lid-driven cavity flow.
 %   - State the objectives: implement the solver from scratch, validate against
 %     Ghia et al.\ \citep{ghia1982}, and explore additional cases.
 %
-Introduce the lid-driven cavity problem and its role as a standard benchmark in
-incompressible CFD~\citep{ghia1982}. Briefly explain why it is nontrivial (recirculating
-flow, corner vortices, Re-dependent topology) and what makes the fractional-step
-method~\citep{perot1993} an effective approach for incompressible flows.
+
+The lid-driven cavity flow problem is a computational fluid dynamics (CFD) benchmark
+problem that consists of simulating the flow of fluid within a square domain with 
+three rigid walls and a driving velocity on the top boundary. The top lid moves at 
+a consant velocity, while the other three walls have a no-slip boundary condition. 
+This setup creates a complex flow pattern with a primary vortex in the center and 
+secondary vortices in the corners, which evolve as the Reynolds number increases. 
+The problem is widely used to validate numerical methods for incompressible flows 
+due to its well-documented solutions and sensitivity to numerical accuracy. The fractional
+stepping method used in this project allows for seperation of the velocity and 
+pressure fields, which is crucial for solving the incompressible Navier--Stokes equations 
+efficiently.
+
+The objective of this project is to implement a fractional-step solver for the 2-D 
+incompressible Navier--Stokes equations on a staggered grid, validate the results against 
+the benchmark data provided by Ghia et al. for a range of Reynolds 
+numbers.
 
 % ============================
 \section{Governing Equations}
@@ -104,6 +117,9 @@ pressure difference to velocity face values using the following formulas:
   (\mathbf{G}p)^v_{i,j} = \frac{p_{i,j} - p_{i,j-1}}{\Delta y}
 \end{equation}  
 
+In this case, the gradient operator is second order accurate in the interior.
+
+
 \subsection{Divergence Operators}
 
 The divergence operator ($\mathbf{D}$) is discretized using central differences for the 
@@ -126,6 +142,11 @@ For the interior points:
 \subsection{Advection Operator}
 
 \subsection{Unit Testing of Operators}
+
+Table 1 summarizes the unit tests performed for each discrete operator, verifying 
+their correctness and expected convergence properties. All tests passed successfully, 
+confirming the accuracy of the implemented operators. With these results in mind, 
+we can now move on to using the solver on the lid-driven cavity flow problem. 
 
 \begin{table*}[ht]
 \centering
@@ -157,21 +178,18 @@ FULL & \textbf{T} & $\boldsymbol{p}^\top \textbf{T} \boldsymbol{p} > 0$ (SPD) & 
 % ============================
 
 \subsection{Staggered Grid Formulation}
-%
-% Describe:
-%   - Uniform staggered grid: u at horizontal faces, v at vertical faces, p at cell centers.
-%   - Grid sizes: u is (nx-1)xny, v is nx x(ny-1), p is nx x ny.
-%   - Pinned pressure reference (bottom-left cell, p=0).
-%   - Include a schematic figure if possible.
-%
-Describe the staggered grid layout with velocity components defined at cell faces
-and pressure at cell centers. State the grid dimensions for each variable and
-the pressure reference condition.
 
-\begin{figure}[t]
+The staggered grid arrangement is illustrated in Figure~\ref{fig:grid}, where the
+horizontal velocity $u$ is defined at the vertical cell faces, the vertical velocity
+$v$ is defined at the horizontal cell faces, and the pressure $p$ is defined at
+the cell centers. This helps to avoid incorrect pressure calculations
+and ensures a consistent discretization of the divergence and gradient operators.
+The pressure at the bottom-left cell is pinned to zero to provide a reference for
+the pressure field.
+
+\begin{figure}[h]
   \centering
-  %\includegraphics[width=0.85\linewidth]{figs/staggered_grid.pdf}
-  % Replace with your own staggered grid schematic
+  \includegraphics[width=0.85\linewidth]{figs/staggered_grid.pdf}
   \caption{Staggered grid formulation. Horizontal velocity $u$ ({\large$\rightarrow$}),
     vertical velocity $v$ ({\large$\uparrow$}), and pressure $p$ (\ensuremath{\blacksquare})
     are located at cell faces and cell centers, respectively. The open circle ({\large$\circ$})
