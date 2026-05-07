@@ -33,18 +33,6 @@ def D(vel, delta, ip, iu, iv, nx, ny, n_cells):
 
 # laplacian operator
 def L(vel, delta, iu, iv, nx, ny, n_vel):
-    """
-    Homogeneous Laplacian operator (u-type → u-type).
-
-    L_full u = L u + bc_L, where L ignores BC values and bc_L
-    carries the Dirichlet wall contributions.
-
-    Boundary stencil rules (Table 1 of Notes_AllOperators):
-      u-nodes, left/right walls  : drop the missing x-neighbor (coeff 0)
-      u-nodes, bottom/top walls  : ghost = -interior → extra -1/δ² on center
-      v-nodes, bottom/top walls  : drop the missing y-neighbor (coeff 0)
-      v-nodes, left/right walls  : ghost = -interior → extra -1/δ² on center
-    """
     result = np.zeros(n_vel)
 
     # --- u-nodes: shape (nx-1, ny) ---
@@ -87,18 +75,6 @@ def L(vel, delta, iu, iv, nx, ny, n_vel):
 
 # boundary condition vectors
 def bc_D(uBC_L, uBC_R, vBC_B, vBC_T, delta, ip, nx, ny, n_cells):
-    """
-    Divergence BC correction vector.
-
-    The homogeneous D skips wall faces (not stored in vel). This vector
-    supplies the missing normal-flux contributions at each wall:
-      Left  wall: west u-face of cells (0, j)    → -uBC_L / Δx
-      Right wall: east u-face of cells (nx-1, j) → +uBC_R / Δx
-      Bottom wall: south v-face of cells (i, 0)  → -vBC_B / Δy
-      Top   wall: north v-face of cells (i, ny-1)→ +vBC_T / Δy
-
-    BCs can be scalars (uniform wall) or 1-D arrays (per-cell wall).
-    """
     bcd_2d = np.zeros((nx, ny))
     bcd_2d[0,    :] -= np.asarray(uBC_L) / delta   # left wall
     bcd_2d[nx-1, :] += np.asarray(uBC_R) / delta   # right wall
@@ -110,26 +86,6 @@ def bc_D(uBC_L, uBC_R, vBC_B, vBC_T, delta, ip, nx, ny, n_cells):
     return bcd
 
 def bc_L(uBC_L, uBC_R, uBC_B, uBC_T, vBC_L, vBC_R, vBC_B, vBC_T, delta, iu, iv, nx, ny, n_vel):
-    """
-    Laplacian BC correction vector bc_L.
-
-    Carries the Dirichlet wall contributions omitted by the homogeneous L.
-    Factor-of-2 rule (Table 1 of Notes_AllOperators):
-      - Node sits AT the wall position (no ghost needed) → factor 1  → BC/δ²
-      - Node is half-δ from the wall (ghost-cell treatment)  → factor 2  → 2·BC/δ²
-
-    u-nodes (sit at x-wall positions, need ghost only in y):
-      Left  iu[1,   :]  : +uBC_L / δ²      (direct x-BC, factor 1)
-      Right iu[nx-1,:]  : +uBC_R / δ²      (direct x-BC, factor 1)
-      Bottom iu[1:nx,0] : +2·uBC_B / δ²   (ghost in y, factor 2)
-      Top  iu[1:nx,ny-1]: +2·uBC_T / δ²   (ghost in y, factor 2)
-
-    v-nodes (sit at y-wall positions, need ghost only in x):
-      Bottom iv[:,1]    : +vBC_B / δ²      (direct y-BC, factor 1)
-      Top    iv[:,ny-1] : +vBC_T / δ²      (direct y-BC, factor 1)
-      Left   iv[0,1:]   : +2·vBC_L / δ²   (ghost in x, factor 2)
-      Right  iv[nx-1,1:]: +2·vBC_R / δ²   (ghost in x, factor 2)
-    """
     bcl = np.zeros(n_vel)
 
     # u-nodes: x-direction BCs (direct, factor 1)
